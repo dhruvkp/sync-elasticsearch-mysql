@@ -1,8 +1,9 @@
-SELECT
-	j.journal_id, j.action_type, j.isbn,
-	b.title, b.authors, b.publication_date
-FROM books.books_journal j
-LEFT JOIN books.books b ON b.isbn = j.isbn
-WHERE j.journal_id > :sql_last_value
-	AND j.action_time < NOW()
-ORDER BY j.journal_id
+SELECT items.item_id, items.last_updated_date, items.type1, items.type2,items.title,items.fpath_url,items.original_source,items.technical_quality, items.audio_quality, items.target_sitelevel, items.clip_start_time, items.clip_end_time, t.tags, ia.artists,ic.categories,id.dates,ie.events,il.languages,ilo.locations,ip.projects FROM items 
+LEFT JOIN (select item_id, GROUP_CONCAT(concat('{',words,'}')) as tags from (select item_id,line_no, group_concat(concat('"',item_tags.word_no,'":{','"name_e":"',newtags.name_e,'","name_g":"',newtags.name_g,'","tag_id":"',newtags.tag_id,'","parent_tag_id":"',newtags.parent_tag_id,'","parent_name_e":"',newtags.parent__e,'","parent_name_g":"',newtags.parent__g,'"}')) as words from item_tags,newtags where item_tags.tag_id=newtags.tag_id group by item_id,line_no) as temp group by item_id) as t ON t.item_id=items.item_id 
+LEFT JOIN (select item_id, concat('{\"artists\":[',GROUP_CONCAT('{\"artist_id\":',item_artists.artist_id,',\"artist_title\":\"',item_artists.artist_title,'\"}'),']}') as artists FROM item_artists GROUP BY item_id) as ia  ON ia.item_id=items.item_id 
+LEFT JOIN (select item_id,concat('{\"categories\":[',GROUP_CONCAT('{\"category_id\":',item_categories.category_id,',\"category_title\":\"',item_categories.category_title,'\"}'),']}') as categories FROM item_categories group by item_id) as ic ON ic.item_id=items.item_id 
+LEFT JOIN (select item_id, concat('{\"dates\":[',GROUP_CONCAT('{\"start_date\":\"',item_dates.start_date,'\",\"start_date_pattern\":\"',item_dates.start_date_pattern,'\",\"end_date\":\"',item_dates.end_date,'\",\"end_date_pattern\":\"',item_dates.end_date_pattern,'\"}'),']}') as dates FROM item_dates group by item_id) as id ON id.item_id=items.item_id 
+LEFT JOIN (select item_id,concat('{\"events\":[',GROUP_CONCAT('{\"event_id\":',item_events.event_id,',\"event_title\":\"',item_events.event_title,'\"}'),']}') as events FROM item_events group by item_id) as ie ON ie.item_id=items.item_id 
+LEFT JOIN (select item_id,concat('{\"languages\":[',GROUP_CONCAT('{\"language_id\":',item_languages.language_id,',\"language_name\":\"',item_languages.language_name,'\"}'),']}') as languages FROM item_languages group by item_id) as il ON il.item_id=items.item_id 
+LEFT JOIN (select item_id,concat('{\"locations\":[',GROUP_CONCAT('{\"location_id\":',item_locations.location_id,',\"location_name\":\"',item_locations.location_name,'\",\"location_name_tree\":\"',item_locations.location_name_tree,'\"}'),']}') as locations FROM item_locations group by item_id) as ilo ON ilo.item_id=items.item_id 
+LEFT JOIN (select item_id,concat('{\"projects\":[',GROUP_CONCAT('{\"project_id\":',item_projects.project_id,',\"project_title\":\"',item_projects.project_title,'\"}'),']}') as projects FROM item_projects group by item_id) as ip ON ip.item_id=items.item_id ORDER BY last_updated_date;
